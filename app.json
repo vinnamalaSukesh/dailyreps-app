@@ -1,25 +1,45 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "DailyReps",
+    "slug": "dailyreps",
+    "scheme": "dailyreps",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0B17",
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.dailyreps.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#4746D0",
+        "foregroundImage": "./assets/logo.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "usesCleartextTraffic": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-screen.png",
+          "imageWidth": 220,
+          "backgroundColor": "#4746D0"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4746D0"
+        }
+      ]
+    ]
   }
 }

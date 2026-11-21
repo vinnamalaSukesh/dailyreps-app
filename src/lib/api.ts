@@ -1,0 +1,65 @@
+import type {
+  Attempt, AttemptResult, LcInfo, Level, Profile, Question, QuestionDetail, Report, Today, Topic, TopicCategory,
+} from './types';
+
+const BASE = process.env.EXPO_PUBLIC_API_URL ?? '';
+const KEY = process.env.EXPO_PUBLIC_API_KEY ?? '';
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': KEY },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, `Can't reach the server at ${BASE || '(EXPO_PUBLIC_API_URL not set)'}`);
+  }
+  if (res.status === 204) return undefined as T;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const detail = data?.detail;
+    throw new ApiError(res.status, typeof detail === 'string' ? detail : `Request failed (${res.status})`);
+  }
+  return data as T;
+}
+
+export const api = {
+  today: () => req<Today>('GET', '/today'),
+
+  questions: () => req<Question[]>('GET', '/questions'),
+  question: (id: string) => req<QuestionDetail>('GET', `/questions/${id}`),
+  lookup: (ref: string) => req<LcInfo>('GET', `/leetcode/lookup?ref=${encodeURIComponent(ref)}`),
+  addQuestion: (q: { ref?: string; title?: string; level?: Level; tags?: string[]; pattern?: string }) =>
+    req<Question>('POST', '/questions', q),
+  patchQuestion: (id: string, q: Partial<Pick<Question, 'title' | 'level' | 'pattern' | 'tags' | 'mastered'>>) =>
+    req<Question>('PATCH', `/questions/${id}`, q),
+  deleteQuestion: (id: string) => req<void>('DELETE', `/questions/${id}`),
+  seed: () => req<{ added: number }>('POST', '/questions/seed'),
+  logAttempt: (id: string, a: { result: AttemptResult; timeMin: number; comment: string }) =>
+    req<{ attempt: Attempt; question: Question }>('POST', `/questions/${id}/attempts`, a),
+  editAttempt: (id: string, a: { comment?: string; timeMin?: number }) => req<Attempt>('PATCH', `/attempts/${id}`, a),
+
+  topics: () => req<Topic[]>('GET', '/topics'),
+  topic: (id: string) => req<Topic>('GET', `/topics/${id}`),
+  addTopic: (title: string, category: TopicCategory) => req<Topic>('POST', '/topics', { title, category }),
+  patchTopic: (id: string, t: Partial<Pick<Topic, 'title' | 'category' | 'status'>>) =>
+    req<Topic>('PATCH', `/topics/${id}`, t),
+  commentTopic: (id: string, text: string) => req<Topic>('POST', `/topics/${id}/comments`, { text }),
+  deleteTopic: (id: string) => req<void>('DELETE', `/topics/${id}`),
+
+  completeWorkout: () => req<{ date: string }>('POST', '/workout/complete'),
+  workoutLogs: () => req<{ date: string; completed: boolean }[]>('GET', '/workout/logs?days=30'),
+
+  reports: () => req<Report[]>('GET', '/reports'),
+  analyzeNow: () => req<Report>('POST', '/reports/analyze'),
+  profile: () => req<Profile>('GET', '/profile'),
+  saveProfile: (p: Profile) => req<Profile>('PUT', '/profile', p),
+};
