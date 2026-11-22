@@ -39,7 +39,26 @@
         {
           "color": "#4746D0"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "4f69b009-d240-43bc-bbb2-dc9192673f49"
+      }
+    },
+    "owner": "sukeshv19"
   }
 }
