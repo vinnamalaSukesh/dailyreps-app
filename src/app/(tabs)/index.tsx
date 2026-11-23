@@ -5,6 +5,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import {
   Button, Card, ErrorBox, H2, LEVEL_BAR, LevelBadge, Loading, Muted, RESULT_LABEL, Screen, TONE, type Tone,
 } from '../../components/ui';
+import { MissReason } from '../../components/MissReason';
 import { api } from '../../lib/api';
 import { formatDay } from '../../lib/dates';
 import type { Streak, Today } from '../../lib/types';
@@ -29,7 +30,7 @@ function ProgressBar({ value, tone }: { value: number; tone: Tone }) {
   );
 }
 
-function DsaCard({ t, onSeed, seeding }: { t: Today; onSeed: () => void; seeding: boolean }) {
+function DsaCard({ t, onSeed, seeding, reload }: { t: Today; onSeed: () => void; seeding: boolean; reload: () => void }) {
   const items = t.plan.items;
   const done = items.filter((i) => i.attempt).length;
   return (
@@ -82,6 +83,9 @@ function DsaCard({ t, onSeed, seeding }: { t: Today; onSeed: () => void; seeding
       {!t.weekend && t.backlogCount < 3 && items.length > 0 ? (
         <Muted>Only {t.backlogCount} new questions left. Add more in the DSA tab.</Muted>
       ) : null}
+      {done < items.length || t.misses?.dsa ? (
+        <MissReason objective="dsa" today={t.date} reason={t.misses?.dsa} tone="violet" onChange={reload} />
+      ) : null}
     </Card>
   );
 }
@@ -116,7 +120,7 @@ export default function TodayScreen() {
             <StreakTile label="Workout" emoji="🏋️" s={t.streaks.workout} tone="emerald" />
           </View>
 
-          <DsaCard t={t} onSeed={seed} seeding={seeding} />
+          <DsaCard t={t} onSeed={seed} seeding={seeding} reload={reload} />
 
           <Card tone="cyan">
             <H2 tone="cyan" right={<Button title="+ Add" variant="ghost" onPress={() => router.navigate('/topics')} className="py-1" />}>
@@ -131,6 +135,7 @@ export default function TodayScreen() {
                 </Muted>
               </Pressable>
             ))}
+            <MissReason objective="topics" today={t.date} reason={t.misses?.topics} tone="cyan" onChange={reload} />
           </Card>
 
           <Card tone="emerald">
@@ -140,6 +145,9 @@ export default function TodayScreen() {
             ) : (
               <Button title="▶  Start workout" tone="emerald" onPress={() => router.push('/workout-player')} />
             )}
+            {!t.workoutDone || t.misses?.workout ? (
+              <MissReason objective="workout" today={t.date} reason={t.misses?.workout} tone="emerald" onChange={reload} />
+            ) : null}
           </Card>
         </>
       ) : null}

@@ -19,6 +19,13 @@ export function relativeDay(key: DateKey, today: DateKey): string {
   return days > 0 ? `in ${days} days` : `${-days} days ago`;
 }
 
+export function addDays(key: DateKey, days: number): DateKey {
+  const d = fromDateKey(key);
+  d.setDate(d.getDate() + days);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export function localToday(): DateKey {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, '0');

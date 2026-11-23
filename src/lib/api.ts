@@ -1,5 +1,6 @@
 import type {
-  Attempt, AttemptResult, LcInfo, Level, Profile, Question, QuestionDetail, Report, Today, Topic, TopicCategory,
+  Attempt, AttemptResult, DateKey, LcInfo, Level, Miss, Objective, Profile, Question, QuestionDetail, Report, Today, Topic,
+  TopicCategory,
 } from './types';
 
 const BASE = process.env.EXPO_PUBLIC_API_URL ?? '';
@@ -57,6 +58,11 @@ export const api = {
 
   completeWorkout: () => req<{ date: string }>('POST', '/workout/complete'),
   workoutLogs: () => req<{ date: string; completed: boolean }[]>('GET', '/workout/logs?days=30'),
+
+  misses: (days = 30) => req<Miss[]>('GET', `/misses?days=${days}`),
+  missSuggestions: () => req<Record<Objective, string[]>>('GET', '/misses/suggestions'),
+  saveMiss: (m: { objective: Objective; reason: string; date?: DateKey }) => req<Miss>('PUT', '/misses', m),
+  deleteMiss: (date: DateKey, objective: Objective) => req<void>('DELETE', `/misses/${date}/${objective}`),
 
   reports: () => req<Report[]>('GET', '/reports'),
   analyzeNow: () => req<Report>('POST', '/reports/analyze'),

@@ -61,7 +61,17 @@ export interface Today {
   backlogCount: number;
   pendingTopics: Topic[];
   workoutDone: boolean;
+  /** Reasons logged today for skipping an objective. */
+  misses?: Partial<Record<Objective, string>>;
   streaks: { dsa: Streak; topics: Streak; workout: Streak };
+}
+
+export type Objective = 'dsa' | 'topics' | 'workout';
+
+export interface Miss {
+  date: DateKey;
+  objective: Objective;
+  reason: string;
 }
 
 export interface LcInfo {
