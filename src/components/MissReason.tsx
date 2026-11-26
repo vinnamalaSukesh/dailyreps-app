@@ -14,8 +14,8 @@ const LABEL: Record<Objective, string> = { dsa: 'DSA', topics: 'topics', workout
  * with suggested reasons. Can also log a reason for yesterday.
  */
 export function MissReason({
-  objective, today, reason, tone, onChange,
-}: { objective: Objective; today: DateKey; reason?: string; tone: Tone; onChange: () => void }) {
+  objective, today, reason, tone, onChange, excuseLeft,
+}: { objective: Objective; today: DateKey; reason?: string; tone: Tone; onChange: () => void; excuseLeft?: boolean }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [day, setDay] = useState<'today' | 'yesterday'>('today');
@@ -93,7 +93,11 @@ export function MissReason({
               {reason ? <Button title="Remove reason" variant="danger" onPress={clear} disabled={busy} /> : null}
               <Button title="Cancel" variant="ghost" onPress={() => setOpen(false)} />
               <Text className={`text-center text-xs ${TONE[tone].text}`}>
-                {"A reason doesn't save your streak, but it shows up in your weekly report."}
+                {excuseLeft === undefined
+                  ? 'Your reason shows up in your weekly report.'
+                  : excuseLeft
+                    ? '🧊 One reason a week keeps your streak alive. It also shows up in your weekly report.'
+                    : "🧊 This week's streak save is used. The reason still shows up in your weekly report."}
               </Text>
             </ScrollView>
           </View>

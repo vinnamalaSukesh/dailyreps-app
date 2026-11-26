@@ -82,6 +82,25 @@ function TopicSuggestions({ items }: { items: Report['suggestedTopics'] }) {
   );
 }
 
+function Stat({ value, label, tone }: { value: string; label: string; tone: Tone }) {
+  return (
+    <View className={`flex-1 items-center rounded-2xl border py-2 ${TONE[tone].card}`}>
+      <Text className={`text-xl font-black ${TONE[tone].text}`}>{value}</Text>
+      <Text className="text-center text-[10px] font-bold text-slate-300">{label}</Text>
+    </View>
+  );
+}
+
+function Numbers({ n }: { n: NonNullable<Report['numbers']> }) {
+  return (
+    <View className="flex-row gap-2">
+      <Stat value={String(n.newSolved)} label={`new solved\nin ${n.activeDays} day${n.activeDays === 1 ? '' : 's'}`} tone="violet" />
+      <Stat value={n.revisitsPlanned ? `${n.revisitsDone}/${n.revisitsPlanned}` : '–'} label={'revisits\ndone'} tone="cyan" />
+      <Stat value={String(n.workoutDays)} label={'workout\ndays'} tone="emerald" />
+    </View>
+  );
+}
+
 function ReportCard({ r, onAdded }: { r: Report; onAdded: () => void }) {
   const add = async (slug: string) => {
     try {
@@ -104,6 +123,7 @@ function ReportCard({ r, onAdded }: { r: Report; onAdded: () => void }) {
       >
         {formatDay(r.createdOn)}
       </H2>
+      {r.numbers ? <Numbers n={r.numbers} /> : null}
       <Text className="text-[15px] leading-6 text-slate-100">{r.summary}</Text>
       <WeakPatterns items={r.weakPatterns} />
       <Focus items={r.focusNextWeek} />

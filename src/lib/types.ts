@@ -43,11 +43,33 @@ export interface Topic {
   comments: { date: DateKey; text: string }[];
   createdAt: DateKey;
   completedAt?: DateKey;
+  /** Set while the topic is tagged for spaced revision; null/missing = not tagged. */
+  revision?: TopicRevision | null;
+  /** Every revision result, kept even after untagging. */
+  reviews?: TopicReview[];
+}
+
+export interface TopicRevision {
+  /** Index into REVISE_INTERVALS. */
+  step: number;
+  nextAt: DateKey;
+  correct: number;
+  wrong: number;
+  lastAt: DateKey | null;
+}
+
+export interface TopicReview {
+  date: DateKey;
+  correct: boolean;
 }
 
 export interface Streak {
   current: number;
   best: number;
+  /** Optional: older servers don't send these. */
+  doneToday?: boolean;
+  /** This week's one streak-saving skip reason is still unused. */
+  excuseLeft?: boolean;
 }
 
 export interface Today {
@@ -60,6 +82,8 @@ export interface Today {
   };
   backlogCount: number;
   pendingTopics: Topic[];
+  /** All topics tagged for revision, soonest first. Optional: older servers don't send it. */
+  revisionTopics?: Topic[];
   workoutDone: boolean;
   /** Reasons logged today for skipping an objective. */
   misses?: Partial<Record<Objective, string>>;
@@ -94,6 +118,8 @@ export interface Report {
   suggestedTopics: (string | SuggestedTopic)[];
   focusNextWeek: string[];
   suggestedQuestions: LcInfo[];
+  /** Missing on reports made before this was added. */
+  numbers?: { newSolved: number; activeDays: number; revisitsDone: number; revisitsPlanned: number; workoutDays: number };
 }
 
 export interface SuggestedTopic {

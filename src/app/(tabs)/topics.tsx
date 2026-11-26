@@ -4,18 +4,25 @@ import { Alert, Pressable, Text, View } from 'react-native';
 
 import { Button, Card, Chip, ErrorBox, H2, Input, Loading, Muted, Screen } from '../../components/ui';
 import { api } from '../../lib/api';
-import { formatDay } from '../../lib/dates';
+import { formatDay, localToday, relativeDay } from '../../lib/dates';
 import { CATEGORY_LABEL } from '../../lib/labels';
+import { isDueOn } from '../../lib/revise';
 import type { Topic, TopicCategory } from '../../lib/types';
 import { useApi } from '../../lib/useApi';
 
 function TopicRow({ t }: { t: Topic }) {
   const last = t.comments[t.comments.length - 1];
+  const today = localToday();
   return (
     <Pressable onPress={() => router.push(`/topic/${t.id}`)} className="rounded-2xl bg-ink-800 p-3 gap-1 active:opacity-70">
       <Text className={`font-semibold ${t.status === 'completed' ? 'text-slate-500' : 'text-white'}`}>
         {t.status === 'completed' ? '✅ ' : '⏳ '}{t.title}
       </Text>
+      {t.revision ? (
+        <Text className={`text-xs font-bold ${isDueOn(t, today) ? 'text-amber-300' : 'text-slate-400'}`}>
+          🔁 {isDueOn(t, today) ? 'revise today' : `revise ${relativeDay(t.revision.nextAt, today)}`}
+        </Text>
+      ) : null}
       <Muted>
         {CATEGORY_LABEL[t.category]}
         {t.status === 'completed' && t.completedAt ? ` · done ${formatDay(t.completedAt)}` : ''}

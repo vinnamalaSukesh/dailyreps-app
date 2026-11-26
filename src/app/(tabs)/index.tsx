@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 
 import {
@@ -8,6 +8,8 @@ import {
 import { MissReason } from '../../components/MissReason';
 import { api } from '../../lib/api';
 import { formatDay } from '../../lib/dates';
+import { syncReminders } from '../../lib/notifications';
+import { isDueOn, revisedOn } from '../../lib/revise';
 import type { Streak, Today } from '../../lib/types';
 import { useApi } from '../../lib/useApi';
 
@@ -84,8 +86,43 @@ function DsaCard({ t, onSeed, seeding, reload }: { t: Today; onSeed: () => void;
         <Muted>Only {t.backlogCount} new questions left. Add more in the DSA tab.</Muted>
       ) : null}
       {done < items.length || t.misses?.dsa ? (
-        <MissReason objective="dsa" today={t.date} reason={t.misses?.dsa} tone="violet" onChange={reload} />
+        <MissReason objective="dsa" today={t.date} reason={t.misses?.dsa} tone="violet" onChange={reload} excuseLeft={t.streaks.dsa.excuseLeft} />
       ) : null}
+    </Card>
+  );
+}
+
+/** Topics due for revision today, plus ones already revised today (shown ticked). Hidden when there are none. */
+function ReviseCard({ t }: { t: Today }) {
+  const all = t.revisionTopics ?? [];
+  const items = all.filter((tp) => isDueOn(tp, t.date) || revisedOn(tp, t.date));
+  if (!items.length) return null;
+  const done = items.filter((tp) => revisedOn(tp, t.date)).length;
+  return (
+    <Card tone="amber">
+      <H2 tone="amber" right={<Text className="text-sm font-bold text-amber-300">{done}/{items.length}</Text>}>
+        🔁 Revise today
+      </H2>
+      <ProgressBar value={done / items.length} tone="amber" />
+      {items.map((tp) => {
+        const revised = revisedOn(tp, t.date);
+        const last = tp.reviews?.[tp.reviews.length - 1];
+        return (
+          <Pressable
+            key={tp.id}
+            onPress={() => router.push(`/topic/${tp.id}`)}
+            className="flex-row items-center gap-3 rounded-2xl bg-ink-800 p-3 active:opacity-70"
+          >
+            <View className={`h-6 w-6 items-center justify-center rounded-lg border-2 ${revised ? 'border-amber-400 bg-amber-500' : 'border-slate-500'}`}>
+              {revised ? <Text className="text-xs font-black text-ink-950">✓</Text> : null}
+            </View>
+            <View className="flex-1">
+              <Text className={`font-semibold ${revised ? 'text-slate-500 line-through' : 'text-white'}`}>{tp.title}</Text>
+              <Muted>{revised && last ? (last.correct ? '✅ correct' : '❌ wrong, back tomorrow') : 'Explain it without notes'}</Muted>
+            </View>
+          </Pressable>
+        );
+      })}
     </Card>
   );
 }
@@ -93,6 +130,11 @@ function DsaCard({ t, onSeed, seeding, reload }: { t: Today; onSeed: () => void;
 export default function TodayScreen() {
   const { data: t, error, loading, reload } = useApi(api.today);
   const [seeding, setSeeding] = useState(false);
+
+  // Reschedule reminders from today's state: nothing fires for what's already done or skipped.
+  useEffect(() => {
+    if (t) syncReminders(t);
+  }, [t]);
 
   const seed = async () => {
     setSeeding(true);
@@ -122,6 +164,8 @@ export default function TodayScreen() {
 
           <DsaCard t={t} onSeed={seed} seeding={seeding} reload={reload} />
 
+          <ReviseCard t={t} />
+
           <Card tone="cyan">
             <H2 tone="cyan" right={<Button title="+ Add" variant="ghost" onPress={() => router.navigate('/topics')} className="py-1" />}>
               Topics in progress
@@ -135,7 +179,7 @@ export default function TodayScreen() {
                 </Muted>
               </Pressable>
             ))}
-            <MissReason objective="topics" today={t.date} reason={t.misses?.topics} tone="cyan" onChange={reload} />
+            <MissReason objective="topics" today={t.date} reason={t.misses?.topics} tone="cyan" onChange={reload} excuseLeft={t.streaks.topics.excuseLeft} />
           </Card>
 
           <Card tone="emerald">
@@ -146,7 +190,7 @@ export default function TodayScreen() {
               <Button title="▶  Start workout" tone="emerald" onPress={() => router.push('/workout-player')} />
             )}
             {!t.workoutDone || t.misses?.workout ? (
-              <MissReason objective="workout" today={t.date} reason={t.misses?.workout} tone="emerald" onChange={reload} />
+              <MissReason objective="workout" today={t.date} reason={t.misses?.workout} tone="emerald" onChange={reload} excuseLeft={t.streaks.workout.excuseLeft} />
             ) : null}
           </Card>
         </>

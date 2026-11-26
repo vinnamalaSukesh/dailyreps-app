@@ -51,9 +51,10 @@ export const api = {
   topics: () => req<Topic[]>('GET', '/topics'),
   topic: (id: string) => req<Topic>('GET', `/topics/${id}`),
   addTopic: (title: string, category: TopicCategory) => req<Topic>('POST', '/topics', { title, category }),
-  patchTopic: (id: string, t: Partial<Pick<Topic, 'title' | 'category' | 'status'>>) =>
+  patchTopic: (id: string, t: Partial<Pick<Topic, 'title' | 'category' | 'status'>> & { revise?: boolean }) =>
     req<Topic>('PATCH', `/topics/${id}`, t),
   commentTopic: (id: string, text: string) => req<Topic>('POST', `/topics/${id}/comments`, { text }),
+  reviewTopic: (id: string, correct: boolean) => req<Topic>('POST', `/topics/${id}/reviews`, { correct }),
   deleteTopic: (id: string) => req<void>('DELETE', `/topics/${id}`),
 
   completeWorkout: () => req<{ date: string }>('POST', '/workout/complete'),
